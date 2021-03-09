@@ -28,10 +28,7 @@ StudentTextEditor::~StudentTextEditor()
 
 bool StudentTextEditor::load(std::string file) {
     ifstream infile(file);
-    if (!infile) {
-        cerr << "Error: Cannot open " << file << endl;
-        return false;
-    }
+    if (!infile) return false; // TODO: Check if file not able to load
     
     reset();
     
@@ -51,10 +48,7 @@ bool StudentTextEditor::load(std::string file) {
 
 bool StudentTextEditor::save(std::string file) {
     ofstream outfile(file);
-    if (!outfile) {
-        cerr << "Error: cannot create " << file << endl;
-        return false;
-    }
+    if (!outfile) return false;
     
     for (auto line : m_lines) {
         string s = line + '\n';
