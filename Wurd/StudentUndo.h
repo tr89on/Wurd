@@ -16,12 +16,12 @@ public:
 
 private:
     struct Edit {
-        Edit(Action action, int r, int c,  int count, string text) {
+        Edit(Action action, int r, int c, string text, int count) {
             m_action = action;
             m_row = r;
             m_col = c;
-            m_count = count;
             m_text = text;
+            m_count = count;
         }
         Action m_action;
         int m_row;
@@ -29,7 +29,7 @@ private:
         int m_count;
         string m_text;
     }; 
-    stack<Edit> m_edits;
+    stack<Edit> m_undos;
 };
 
 #endif // STUDENTUNDO_H_

@@ -30,17 +30,17 @@ private:
             }
         }
         // TODO: free up dynamically allocated memory
-//        ~Node() {
-//            for (int i = 0; i < 27; i++) {
-//                if (children[i] != nullptr) delete children[i];
-//            }
-//        }
+        ~Node() {
+            for (int i = 0; i < 27; i++) {
+                if (children[i] != nullptr) delete children[i];
+            }
+        }
         char m_val;
         bool m_ending;
         Node* children[27];
     };
-    
-    Node* m_head = new Node('.');
+
+    Node* m_head;
 };
 
 #endif  // STUDENTSPELLCHECK_H_

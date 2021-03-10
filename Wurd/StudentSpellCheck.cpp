@@ -14,7 +14,6 @@ SpellCheck* createSpellCheck()
 }
 
 StudentSpellCheck::~StudentSpellCheck() {
-	// TODO: free dynamically allocated mem
     delete m_head;
 }
 
@@ -23,6 +22,8 @@ bool StudentSpellCheck::load(std::string dictionaryFile) {
     if (!infile) return false;
     
     // TODO: possibly clear old dictionary
+    if (m_head != nullptr) delete m_head;
+    m_head = new Node('.');
     
     string s;
     while (getline(infile, s)) {
@@ -37,9 +38,22 @@ bool StudentSpellCheck::spellCheck(std::string word, int max_suggestions, std::v
     
     suggestions.clear();
     
-    suggestions.push_back("poo");
+    int numAdded = 0; // number of suggestions added
+    int len = 27; // length of the dictionary
+    for (int pos = 0; pos < word.size(); pos++) {
+        for (int i = 0; i < len; i++) {
+            char letter = 'a' + i;
+            if (i == len-1) letter = '\'';
+            
+            string suggestion = word.substr(0,pos) + letter + word.substr(pos+1); // substitute another letter at pos
+            if (numAdded < max_suggestions && inDict(suggestion)) {
+                numAdded++;
+                suggestions.push_back(suggestion);
+            }
+        }
+    }
     
-	return false; // TODO
+	return false;
 }
 
 void StudentSpellCheck::spellCheckLine(const std::string& line, std::vector<SpellCheck::Position>& problems) {
