@@ -19,11 +19,12 @@ StudentTextEditor::StudentTextEditor(Undo* undo)
      
      m_lines.push_back("");
      resetCursorPos();
+     m_is_undo = false;
 }
 
 StudentTextEditor::~StudentTextEditor()
 {
-	// TODO
+	// TODO: clear studenttext but dont clear undo stack
 }
 
 bool StudentTextEditor::load(std::string file) { // TODO: convert \t to 4 spaces?
@@ -108,13 +109,9 @@ void StudentTextEditor::move(Dir dir) {
         }
         m_col++;
     } else if (dir == Dir::HOME) {
-        resetCursorPos();
+        m_col = 0;
     } else if (dir == Dir::END) {
-        m_row = m_lines.size()-1;
-        m_pos = m_lines.end();
-        m_pos--;
         m_col = m_pos->size();
-        // TODO: implement this!
     }
 }
 
@@ -124,14 +121,19 @@ void StudentTextEditor::del() {
             string line = *m_pos;
             m_pos = m_lines.erase(m_pos);
             *m_pos = line + *m_pos;
+            
+            // push JOIN to undo
+            if (!m_is_undo) getUndo()->submit(Undo::Action::JOIN, m_row, m_col, '\n');
         }
         return;
     }
     
     string line = *m_pos;
+    char deleted_char = line.at(m_col);
     *m_pos = line.substr(0, m_col) + line.substr(m_col+1);
     
-	// TODO: push change to undo
+	// push DELETE to undo only if not currently undoing
+    if (!m_is_undo) getUndo()->submit(Undo::Action::DELETE, m_row, m_col, deleted_char);
 }
 
 void StudentTextEditor::backspace() {
@@ -142,21 +144,25 @@ void StudentTextEditor::backspace() {
             decRow();
             m_col = m_pos->length();
             *m_pos += line;
+            
+            // push JOIN to undo
+            if (!m_is_undo) getUndo()->submit(Undo::Action::JOIN, m_row, m_col, '\n');
         }
         
         return;
     }
     
     string line = *m_pos;
+    char deleted_char = line.at(m_col-1);
     *m_pos = line.substr(0, m_col-1) + line.substr(m_col);
     m_col--;
     
-    // TODO: push change to undo
+    // push BACKSPACE to undo only if not currently undoing
+    if (!m_is_undo) getUndo()->submit(Undo::Action::DELETE, m_row, m_col, deleted_char);
 }
 
 void StudentTextEditor::insert(char ch) {
     if (ch == '\t') {
-        // TODO: check if tab is undoed all at once or in individual spaces
         for (int i = 0; i < 4; i++) {
             insert(' ');
         }
@@ -167,8 +173,8 @@ void StudentTextEditor::insert(char ch) {
     *m_pos = line.substr(0, m_col) + ch + line.substr(m_col);
     m_col++;
     
-    
-    // TODO: push change to undo
+    // push INSERT to undo only if not currently undoing
+    if (!m_is_undo) getUndo()->submit(Undo::Action::INSERT, m_row, m_col, ch);
 }
 
 void StudentTextEditor::enter() {
@@ -176,12 +182,13 @@ void StudentTextEditor::enter() {
     string newline = "" + line.substr(m_col); // split line at the current character
     *m_pos = line.substr(0, m_col); // 1st half remains on current line
     
+    // push SPLIT to undo only if not currently undoing (push BEFORE enter pressed)
+    if (!m_is_undo) getUndo()->submit(Undo::Action::SPLIT, m_row, m_col, '\n');
+    
     m_lines.insert(std::next(m_pos), "");
     incRow();
     m_col = 0;
     *m_pos += newline; // 2nd half ends up on new line
-    
-    // TODO: push change to undo
 }
 
 void StudentTextEditor::getPos(int& row, int& col) const {
@@ -216,20 +223,38 @@ int StudentTextEditor::getLines(int startRow, int numRows, std::vector<std::stri
 void StudentTextEditor::undo() {
     int count;
     string text;
-    Undo::Action act = getUndo()->get(m_row, m_col, count, text);
+    int start_row;
+    Undo::Action act = getUndo()->get(start_row, m_col, count, text);
+    if (act == Undo::Action::ERROR) return;
+    
+    m_is_undo = true;
+    
+    while (m_row < start_row) {
+        incRow();
+    }
+    while (m_row > start_row) {
+        decRow();
+    }
+    
     if (act == Undo::Action::INSERT) {
         for (char c : text) {
             insert(c);
         }
     } else if (act == Undo::Action::DELETE) {
         for (int i = 0; i < count; i++) {
-            del();
+            backspace();
         }
     } else if (act == Undo::Action::SPLIT) {
         enter();
+        if (m_row != 0) {
+            decRow();
+            m_col = m_pos->size();
+        }
     } else if (act == Undo::Action::JOIN) {
         del();
     }
+    
+    m_is_undo = false;
 }
 
 void StudentTextEditor::resetCursorPos() {

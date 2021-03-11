@@ -6,11 +6,32 @@ Undo* createUndo()
 }
 
 void StudentUndo::submit(const Action action, int row, int col, char ch) {
-    Edit top = m_undos.top();
     // TODO: implement batching
-    if (action == Action::INSERT) {
-        if (top.m_action == Action::INSERT) {
-            
+    
+    if (!m_undos.empty()) {
+        Edit top = m_undos.top();
+        if (action == top.m_action && row == top.m_row) {
+            if (action == Action::INSERT && col == top.m_col+1) {
+                m_undos.pop();
+                top.m_count++;
+                top.m_row = row;
+                top.m_col = col;
+                m_undos.push(top);
+                return;
+            } else if (action == Action::DELETE) {
+                if (col == top.m_col) {
+                    top.m_text = top.m_text + ch;
+                } else if (col == top.m_col-1) {
+                    top.m_text = ch + top.m_text;
+                } else {
+                    return; // not in the right location
+                }
+                m_undos.pop();
+                top.m_row = row;
+                top.m_col = col;
+                m_undos.push(top);
+                return;
+            }
         }
     }
     
@@ -38,7 +59,7 @@ StudentUndo::Action StudentUndo::get(int& row, int& col, int& count, std::string
     count = top.m_count;
     text = top.m_text;
     
-    return act;  // TODO
+    return act; 
 }
 
 void StudentUndo::clear() {

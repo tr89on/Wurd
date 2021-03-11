@@ -37,6 +37,8 @@ private:
     list<string>::iterator m_pos;
     int m_row;
     int m_col;
+    
+    bool m_is_undo;
 };
 
 #endif // STUDENTTEXTEDITOR_H_
