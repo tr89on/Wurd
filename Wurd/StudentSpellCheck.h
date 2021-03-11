@@ -8,7 +8,7 @@
 
 class StudentSpellCheck : public SpellCheck {
 public:
-    StudentSpellCheck() { }
+    StudentSpellCheck() { m_head = new Node('.'); }
 	virtual ~StudentSpellCheck();
 	bool load(std::string dict_file);
 	bool spellCheck(std::string word, int maxSuggestions, std::vector<std::string>& suggestions);
@@ -29,7 +29,7 @@ private:
                 children[i] = nullptr;
             }
         }
-        // TODO: free up dynamically allocated memory
+        // free up dynamically allocated memory
         ~Node() {
             for (int i = 0; i < 27; i++) {
                 if (children[i] != nullptr) delete children[i];

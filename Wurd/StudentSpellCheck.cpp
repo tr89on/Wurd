@@ -5,6 +5,7 @@
 // STUDENT ADDITIONS
 #include <iostream>
 #include <fstream>
+#include <cctype>
 
 using namespace std;
 
@@ -14,14 +15,14 @@ SpellCheck* createSpellCheck()
 }
 
 StudentSpellCheck::~StudentSpellCheck() {
-    delete m_head;
+    if (m_head != nullptr) delete m_head;
 }
 
 bool StudentSpellCheck::load(std::string dictionaryFile) {
     ifstream infile(dictionaryFile);
     if (!infile) return false;
     
-    // TODO: possibly clear old dictionary
+    // clear old dictionary
     if (m_head != nullptr) delete m_head;
     m_head = new Node('.'); // initialize new dummy node
     
@@ -30,7 +31,7 @@ bool StudentSpellCheck::load(std::string dictionaryFile) {
         addWordToDict(s);
     }
     
-    return true; // TODO: dictionary load success message?
+    return true;
 }
 
 bool StudentSpellCheck::spellCheck(std::string word, int max_suggestions, std::vector<std::string>& suggestions) {
@@ -91,9 +92,8 @@ bool StudentSpellCheck::inDict(string word) {
     string w = getFormattedWord(word);
     Node* curr = m_head;
     
-    for (int i = 0; i < w.size(); i++) {
-        int index = getCharIndex(w.at(i));
-        
+    for (auto c : w) {
+        int index = getCharIndex(c);
         if (curr->children[index] == nullptr) return false; // next char cannot follow current char
         curr = curr->children[index];
     }
