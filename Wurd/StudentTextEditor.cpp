@@ -24,10 +24,10 @@ StudentTextEditor::StudentTextEditor(Undo* undo)
 
 StudentTextEditor::~StudentTextEditor()
 {
-	// TODO: clear studenttext but dont clear undo stack
+    reset();
 }
 
-bool StudentTextEditor::load(std::string file) { // TODO: convert \t to 4 spaces?
+bool StudentTextEditor::load(std::string file) {
     ifstream infile(file);
     if (!infile) return false;
     
@@ -81,26 +81,25 @@ void StudentTextEditor::reset() {
 }
 
 void StudentTextEditor::move(Dir dir) {
-    // TODO: Handle bounds cases
     if (dir == Dir::UP) {
         if (m_row == 0) return; // at the top row
         decRow();
-        if (m_pos->length() < m_col) m_col = m_pos->length();
+        if (m_pos->size() < m_col) m_col = m_pos->size();
     } else if (dir == Dir::DOWN) {
         if (m_row == m_lines.size()-1) return; // at the bottom row
         incRow();
-        if (m_pos->length() < m_col) m_col = m_pos->length();
+        if (m_pos->size() < m_col) m_col = m_pos->size();
     } else if (dir == Dir::LEFT) {
         if (m_col == 0) { // at the very left
             if (m_row != 0) { // not at the top row
                 decRow();
-                m_col = m_pos->length();
+                m_col = m_pos->size();
             }
             return;
         }
         m_col--;
     } else if (dir == Dir::RIGHT) {
-        if (m_col >= m_pos->length()) { // at the very right
+        if (m_col >= m_pos->size()) { // at the very right
             if (m_row != m_lines.size() - 1) { // not at the bottom row
                 incRow();
                 m_col = 0;
@@ -226,6 +225,7 @@ void StudentTextEditor::undo() {
     int start_row;
     Undo::Action act = getUndo()->get(start_row, m_col, count, text);
     if (act == Undo::Action::ERROR) return;
+    int orig_col = m_col; // keep track of original col
     
     m_is_undo = true;
     
@@ -240,6 +240,7 @@ void StudentTextEditor::undo() {
         for (char c : text) {
             insert(c);
         }
+        m_col = orig_col;
     } else if (act == Undo::Action::DELETE) {
         for (int i = 0; i < count; i++) {
             backspace();

@@ -5,11 +5,8 @@
 
 class Undo;
 
-#include <algorithm>
 #include <iostream>
 #include <list>
-
-using namespace std;
 
 class StudentTextEditor : public TextEditor {
 public:
@@ -33,8 +30,8 @@ private:
     void incRow();
     void decRow();
     
-    list<string> m_lines;
-    list<string>::iterator m_pos;
+    std::list<std::string> m_lines;
+    std::list<std::string>::iterator m_pos;
     int m_row;
     int m_col;
     

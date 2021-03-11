@@ -5,7 +5,6 @@
 
 // STUDENT ADDED THINGS
 #include <stack>
-using namespace std;
 
 class StudentUndo : public Undo {
 public:
@@ -16,7 +15,7 @@ public:
 
 private:
     struct Edit {
-        Edit(Action action, int r, int c, string text, int count) {
+        Edit(Action action, int r, int c, std::string text, int count) {
             m_action = action;
             m_row = r;
             m_col = c;
@@ -27,9 +26,9 @@ private:
         int m_row;
         int m_col;
         int m_count;
-        string m_text;
+        std::string m_text;
     }; 
-    stack<Edit> m_undos;
+    std::stack<Edit> m_undos;
 };
 
 #endif // STUDENTUNDO_H_

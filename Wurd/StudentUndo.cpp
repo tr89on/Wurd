@@ -6,8 +6,7 @@ Undo* createUndo()
 }
 
 void StudentUndo::submit(const Action action, int row, int col, char ch) {
-    // TODO: implement batching
-    
+    // batching
     if (!m_undos.empty()) {
         Edit top = m_undos.top();
         if (action == top.m_action && row == top.m_row) {
@@ -21,21 +20,24 @@ void StudentUndo::submit(const Action action, int row, int col, char ch) {
             } else if (action == Action::DELETE) {
                 if (col == top.m_col) {
                     top.m_text = top.m_text + ch;
+                    m_undos.pop();
+                    top.m_row = row;
+                    top.m_col = col;
+                    m_undos.push(top);
+                    return;
                 } else if (col == top.m_col-1) {
                     top.m_text = ch + top.m_text;
-                } else {
-                    return; // not in the right location
+                    m_undos.pop();
+                    top.m_row = row;
+                    top.m_col = col;
+                    m_undos.push(top);
+                    return;
                 }
-                m_undos.pop();
-                top.m_row = row;
-                top.m_col = col;
-                m_undos.push(top);
-                return;
             }
         }
     }
     
-    string text = "";
+    std::string text = "";
     text += ch;
     Edit newEdit(action, row, col, text, 1);
     

@@ -23,7 +23,7 @@ bool StudentSpellCheck::load(std::string dictionaryFile) {
     
     // TODO: possibly clear old dictionary
     if (m_head != nullptr) delete m_head;
-    m_head = new Node('.');
+    m_head = new Node('.'); // initialize new dummy node
     
     string s;
     while (getline(infile, s)) {
