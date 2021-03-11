@@ -91,7 +91,6 @@ void StudentSpellCheck::addWordToDict(string word) {
 bool StudentSpellCheck::inDict(string word) {
     string w = getFormattedWord(word);
     Node* curr = m_head;
-    
     for (auto c : w) {
         int index = getCharIndex(c);
         if (curr->children[index] == nullptr) return false; // next char cannot follow current char

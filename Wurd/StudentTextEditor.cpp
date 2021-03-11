@@ -65,7 +65,7 @@ bool StudentTextEditor::save(std::string file) {
     ofstream outfile(file);
     if (!outfile) return false;
     
-    for (auto line : m_lines) {
+    for (auto line : m_lines) { 
         string s = line + '\n';
         outfile << s;
     }
