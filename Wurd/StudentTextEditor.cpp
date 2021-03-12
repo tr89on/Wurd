@@ -31,7 +31,7 @@ bool StudentTextEditor::load(std::string file) {
     ifstream infile(file);
     if (!infile) return false;
     
-    reset();
+    reset(); // clear the current editor
     
     string s;
     while (getline(infile, s)) {
@@ -42,7 +42,7 @@ bool StudentTextEditor::load(std::string file) {
         
         string newline = "";
         for (char c : s) {
-            if (c == '\t') { // handle tab characters
+            if (c == '\t') { // handle tab characters (add 4 spaces)
                 for (int i = 0; i < 4; i++) {
                     newline += " ";
                 }
@@ -66,7 +66,7 @@ bool StudentTextEditor::save(std::string file) {
     if (!outfile) return false;
     
     for (auto line : m_lines) { 
-        string s = line + '\n';
+        string s = line + '\n'; // add 1 line at a time
         outfile << s;
     }
     
@@ -74,7 +74,7 @@ bool StudentTextEditor::save(std::string file) {
 }
 
 void StudentTextEditor::reset() {
-    m_lines.clear(); // clear all the lines of text (no dynamic allocation)
+    m_lines.clear(); // clear all the lines of text
     resetCursorPos();
     
     getUndo()->clear();
@@ -84,39 +84,40 @@ void StudentTextEditor::move(Dir dir) {
     if (dir == Dir::UP) {
         if (m_row == 0) return; // at the top row
         decRow();
-        if (m_pos->size() < m_col) m_col = m_pos->size();
+        if (m_pos->size() < m_col) m_col = m_pos->size(); // make sure col still in bounds
     } else if (dir == Dir::DOWN) {
         if (m_row == m_lines.size()-1) return; // at the bottom row
         incRow();
-        if (m_pos->size() < m_col) m_col = m_pos->size();
+        if (m_pos->size() < m_col) m_col = m_pos->size(); // make sure col still in bounds
     } else if (dir == Dir::LEFT) {
-        if (m_col == 0) { // at the very left
+        if (m_col == 0) { // at the very left of a line
             if (m_row != 0) { // not at the top row
-                decRow();
+                decRow(); // go to the end of the previous row
                 m_col = m_pos->size();
             }
             return;
         }
         m_col--;
     } else if (dir == Dir::RIGHT) {
-        if (m_col >= m_pos->size()) { // at the very right
+        if (m_col >= m_pos->size()) { // at the very right of a line
             if (m_row != m_lines.size() - 1) { // not at the bottom row
-                incRow();
+                incRow(); // go to the beginning of next row
                 m_col = 0;
             }
             return;
         }
         m_col++;
     } else if (dir == Dir::HOME) {
-        m_col = 0;
+        m_col = 0; // go to start of current line
     } else if (dir == Dir::END) {
-        m_col = m_pos->size();
+        m_col = m_pos->size(); // go to end of current line
     }
 }
 
 void StudentTextEditor::del() {
     if (m_col == m_pos->size()) { // at the very right
         if (m_row != m_lines.size()-1) { // not at the bottom row
+            // merge next line with the current line
             string line = *m_pos;
             m_pos = m_lines.erase(m_pos);
             *m_pos = line + *m_pos;
@@ -138,6 +139,7 @@ void StudentTextEditor::del() {
 void StudentTextEditor::backspace() {
     if (m_col == 0) { // at the very left
         if (m_row != 0) { // not at the top row
+            // merge current line with the previous line
             string line = *m_pos;
             m_pos = m_lines.erase(m_pos);
             decRow();
@@ -156,12 +158,12 @@ void StudentTextEditor::backspace() {
     *m_pos = line.substr(0, m_col-1) + line.substr(m_col);
     m_col--;
     
-    // push BACKSPACE to undo only if not currently undoing
+    // push DELETE to undo only if not currently undoing
     if (!m_is_undo) getUndo()->submit(Undo::Action::DELETE, m_row, m_col, deleted_char);
 }
 
 void StudentTextEditor::insert(char ch) {
-    if (ch == '\t') {
+    if (ch == '\t') { // handle tab character
         for (int i = 0; i < 4; i++) {
             insert(' ');
         }
@@ -201,6 +203,7 @@ int StudentTextEditor::getLines(int startRow, int numRows, std::vector<std::stri
     
     lines.clear(); // clear the old lines
     
+    // shift the iterator to the starting row
     int r = m_row;
     auto it = m_pos;
     while (r < startRow) {
@@ -227,8 +230,9 @@ void StudentTextEditor::undo() {
     if (act == Undo::Action::ERROR) return;
     int orig_col = m_col; // keep track of original col
     
-    m_is_undo = true;
+    m_is_undo = true; // mark that an undo is currently being made
     
+    // move the cursor to the correct starting row
     while (m_row < start_row) {
         incRow();
     }
@@ -240,14 +244,14 @@ void StudentTextEditor::undo() {
         for (char c : text) {
             insert(c);
         }
-        m_col = orig_col;
+        m_col = orig_col; // after undoing cursor ends up at the beginning of the inserted text
     } else if (act == Undo::Action::DELETE) {
         for (int i = 0; i < count; i++) {
             backspace();
         }
     } else if (act == Undo::Action::SPLIT) {
         enter();
-        if (m_row != 0) {
+        if (m_row != 0) { // after splitting cursor ends up at the end of previous line
             decRow();
             m_col = m_pos->size();
         }
@@ -255,7 +259,7 @@ void StudentTextEditor::undo() {
         del();
     }
     
-    m_is_undo = false;
+    m_is_undo = false; // no longer making an undo
 }
 
 void StudentTextEditor::resetCursorPos() {

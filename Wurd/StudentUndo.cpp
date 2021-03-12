@@ -9,23 +9,23 @@ void StudentUndo::submit(const Action action, int row, int col, char ch) {
     // batching
     if (!m_undos.empty()) {
         Edit top = m_undos.top();
-        if (action == top.m_action && row == top.m_row) {
-            if (action == Action::INSERT && col == top.m_col+1) {
+        if (action == top.m_action && row == top.m_row) { // batching only happens on the same row
+            if (action == Action::INSERT && col == top.m_col+1) { // if the action was insert() then the cursor moved right 1
                 m_undos.pop();
                 top.m_count++;
                 top.m_row = row;
                 top.m_col = col;
-                m_undos.push(top);
+                m_undos.push(top); // push the batched INSERT
                 return;
             } else if (action == Action::DELETE) {
-                if (col == top.m_col) {
+                if (col == top.m_col) { // if the action was del() then the cursor stays in the same place
                     top.m_text = top.m_text + ch;
                     m_undos.pop();
                     top.m_row = row;
                     top.m_col = col;
                     m_undos.push(top);
                     return;
-                } else if (col == top.m_col-1) {
+                } else if (col == top.m_col-1) { // if the action was backspace() then the cursor moved back 1
                     top.m_text = ch + top.m_text;
                     m_undos.pop();
                     top.m_row = row;
@@ -49,6 +49,8 @@ StudentUndo::Action StudentUndo::get(int& row, int& col, int& count, std::string
     
     Edit top = m_undos.top();
     m_undos.pop();
+    
+    // set the appropriate Undo action
     Action act;
     if (top.m_action == Action::INSERT) act = Action::DELETE;
     else if (top.m_action == Action::DELETE) act = Action::INSERT;

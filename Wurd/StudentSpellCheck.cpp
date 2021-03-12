@@ -35,19 +35,19 @@ bool StudentSpellCheck::load(std::string dictionaryFile) {
 }
 
 bool StudentSpellCheck::spellCheck(std::string word, int max_suggestions, std::vector<std::string>& suggestions) {
-    if (inDict(word)) return true;
+    if (inDict(word)) return true; // word in the dictionary so no need to find suggestions
     
     suggestions.clear();
     
     int numAdded = 0; // number of suggestions added
-    int len = 27; // length of the dictionary
+    int len = 27; // # of valid substitution characters
     for (int pos = 0; pos < word.size(); pos++) {
         for (int i = 0; i < len; i++) {
-            char letter = 'a' + i;
-            if (i == len-1) letter = '\'';
+            char letter = 'a' + i; // try substituting 'a'-'z'
+            if (i == len-1) letter = '\''; // handle apostrophe case
             
-            string suggestion = word.substr(0,pos) + letter + word.substr(pos+1); // substitute another letter at pos
-            if (numAdded < max_suggestions && inDict(suggestion)) {
+            string suggestion = word.substr(0,pos) + letter + word.substr(pos+1); // substitute a different letter at pos in word
+            if (numAdded < max_suggestions && inDict(suggestion)) { // add the valid suggestion if needed
                 numAdded++;
                 suggestions.push_back(suggestion);
             }
@@ -59,8 +59,8 @@ bool StudentSpellCheck::spellCheck(std::string word, int max_suggestions, std::v
 
 void StudentSpellCheck::spellCheckLine(const std::string& line, std::vector<SpellCheck::Position>& problems) {
     int start = 0;
-    for (int end = 0; end <= line.size(); end++) {
-        if (end == line.size() || !isWordChar(line.at(end))) {
+    for (int end = 0; end <= line.size(); end++) { // 2-pointers approach to partitioning words
+        if (end == line.size() || !isWordChar(line.at(end))) { // split words by non-word characters (or the end of the line)
             string word = line.substr(start, end-start);
             
             if (!inDict(word)) {
@@ -70,7 +70,7 @@ void StudentSpellCheck::spellCheckLine(const std::string& line, std::vector<Spel
                 problems.push_back(p); // adds a copy of p to problems
             }
             
-            start = end+1;
+            start = end+1; // update the start pointer
         }
     }
 }
@@ -85,7 +85,7 @@ void StudentSpellCheck::addWordToDict(string word) {
         }
         curr = curr->children[index];
     }
-    curr->m_ending = true;
+    curr->m_ending = true; // mark the ending of a valid word
 }
 
 bool StudentSpellCheck::inDict(string word) {
@@ -107,6 +107,7 @@ bool StudentSpellCheck::isWordChar(char c) {
     return isalpha(c) || c == '\'';
 }
 
+// strip the invalid (non a-z or apostrophe) characters from a word
 string StudentSpellCheck::getFormattedWord(string s) {
     string lower = "";
     for (char c : s) {
